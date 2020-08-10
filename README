@@ -1,0 +1,8 @@
+A ufc stats scraper
+
+In current form, gathers information on fighter attributes found at 
+http://ufcstats.com/statistics/fighters
+
+fighter_Scraper.py is where all the magic is happening, other files misc at this point.
+
+More to come!
