@@ -8,6 +8,7 @@ import numpy as np
 class Fighter:
 	number_of_fighters = 0
 
+
 	def __init__(self, fighter_data):
 		self.first_name, self.last_name = fighter_data[0], fighter_data[1]
 		self.record = fighter_data[2]
@@ -27,66 +28,45 @@ class Fighter:
 		self.sub_avg = fighter_data[16]
 		Fighter.number_of_fighters += 1
 	
+	def parseName(self, name):
+		if name is None:
+			return None
+		else:
+			name = name.split()
+			return (name[0], name[1])
+	def parseRecord(self, record):
+		record_list = record.split("Record: ", 10)[1].split("-")
+		if "NC" in record_list[2]:
+			tmp = record_list[2].split(" (")
+			draws = int(tmp[0])
+			no_contests = int(tmp[1][0:2].strip())
+		else:
+			draws = int(record_list[2])
+			no_contests = 0
+		wins = int(record_list[0])
+		losses = int(record_list[1])
+		return (wins, losses, draws, no_contests)
+	def parseHeight(self, height):
+		height_list = height.split("\' ")
+		feet = int(height_list[0][0:1])
+		inches = int(height_list[1].split("\"")[0])
+		return (feet*12) + inches
+	def parseBirthday(self, birthday):
+		birthday = birthday.split(" ")
+		day = int(birthday[1][:-1])
+		year = int(birthday[2])
+		dic = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr' : 4, 'May' : 5, 'Jun' : 6, 'Jul' : 7, 'Aug' : 8, 'Sep' : 9, 'Oct' : 10, 'Nov' : 11, 'Dec' : 12}
+		month = dic[str(birthday[0].strip())]
+		#print(str(day) + " " + str(month) + " " + str(year))
+		birthday = (day, month, year)
+		return birthday
+		
+
+
 	def describe(self):
 		pprint(vars(self))
 
-	def getName(self):
-		return self.name
-	def getRecord(self):
-		return self.record
-	def getNickname(self):
-		return self.nickname
-	def getHeight(self):
-		return self.height
-	def getWeight(self):
-		return self.weight
-	def getReach(self):
-		return self.reach
-	def getStance(self):
-		return self.stance
-	def getBirthDate(self):
-		return self.birth_date	 
-	def getSigStrikesPerMin(self):
-		return self.sig_strikes_per_min
-	def getSigStrikesAccur(self):
-		return self.sig_strikes_accur	
-	def getSigStrikesAbsbPerMin(self):
-		return self.sig_strikes_defnce
-	def getTakeDownAvg(self):
-		return self.take_down_avg
-	def getTakeDownAccur(self):
-		return self.take_down_accur
-	def getTakeDownDef(self):
-		return self.take_down_def
-	def subAvg(self):
-		return self.sub_avg
 
-def describeRequest(requestObject):
-	print("HEADERS:")
-	print(requestObject.headers)
-	print("END REQUEST OBJ HEADERS")
-
-def describeSoup(bsObject):
-	print(bsObject.prettify())
-
-#Returns a list of links to individual fighter pages at http://ufcstats.com/statistics/fighters?char={%char}&page=all'
-def getFighterUrls():
-	URL_PRE = 'http://ufcstats.com/statistics/fighters?char='
-	URL_POST = '&page=all'
-	alphabet = string.ascii_lowercase
-	fighter_url_list = []
-	for c in alphabet:
-		URL = URL_PRE + c + URL_POST
-		webpage = requests.get(URL)
-		soup = BeautifulSoup(webpage.content, 'lxml')
-		for item in soup.find_all('a'):
-			if item.parent.name == 'td':
-				fighter_url_list.append(item['href'])
-	#slice off every 2nd and 3rd string
-	fighter_url_list=  fighter_url_list[::3]
-	return fighter_url_list
-
-#takes a figher's webpage url and returns a list with the fighter's metadata
 def getFighterData(fighter_URL):
 	webpage = requests.get(fighter_URL)
 	soup = BeautifulSoup(webpage.content, 'lxml')
@@ -101,18 +81,6 @@ def getFighterData(fighter_URL):
 	for item in soup.find_all('li', class_ = 'b-list__box-list-item b-list__box-list-item_type_block'):
 		fighter_data.append(item.i.next_sibling.strip())
 	return fighter_data
-
-#takes a list of fighter objects and creates and returns data frame
-def dataFrameConstruction(FighterObjectList):
-	columns = ['name', 'record', 'nickname', 'height', 'weight', 'reach', 'stance', 'birth_date', 'sig_strikes_per_min', 'sig_strikes_accur', 'sig_strikes_absrb_min', 'sig_strikes_defnce', 'take_down_avg', 'take_down_accur', 'take_down_def', 'sub_avg']
-	index = [n for n in range(len(FighterObjectList))]
-	df = pd.DataFrame([vars(f) for f in FighterObjectList])
-	#If you want to print whole dataframe
-	with pd.option_context('display.max_rows', None, 'display.max_columns', None):
-		print(df)
-	#otherwise print shorthand
-	#print(df)
-	return df
 
 def parseName(name):
 	try:
@@ -186,15 +154,30 @@ def parse(fighter_meta_data):
 	#retun dict?
 	#return {"first_name" : first_name, "last_name" : last_name, "record" : record, "height" : height, "birth_date" : birth_date,"nickname" : nickname, "weight" : weight, "reach" : reach, "stance" : stance, "SSPM" : sig_strikes_per_min, "SSA" : sig_strikes_accur, "SSAPM" : sig_strikes_absrb_min, "SSD" : sig_strikes_defnce, "TDAV" : take_down_avg,"TDAC" : take_down_accur, "TDD" : take_down_def}
 
-
 def main():
-	fighter_urls = getFighterUrls()
+	fighter_url1 = 'http://ufcstats.com/fighter-details/93fe7332d16c6ad9'
+	fighter_url2 = 'http://ufcstats.com/fighter-details/fa6796c55d6c5440'
 	Fighter_Object_List = []
+	Fighter_Meta_Data1 = getFighterData(fighter_url1)
+	Fighter_Meta_Data2 = getFighterData(fighter_url2)
+	Fighter_Object_List.append(Fighter(parse(Fighter_Meta_Data1)))
+	Fighter_Object_List.append(Fighter(parse(Fighter_Meta_Data2)))
+	pprint(vars(Fighter_Object_List[0]))
+	pprint(vars(Fighter_Object_List[1]))
+	#print(parse(Fighter_Meta_Data1))
+	#print()
+	#print(parse(Fighter_Meta_Data2))
+	#Abdurakihmov = Fighter(Fighter_Meta_Data1)
+	#Blaydes = Fighter(Fighter_Meta_Data2)
 	#for i in range(0, len(fighter_urls)):
-	for i in range(0, 20):
-		Fighter_Object_List.append(Fighter(parse(getFighterData(fighter_urls[i]))))	
-	print ('# OF FIGHTERS: ' + str(Fighter.number_of_fighters))
-	df = dataFrameConstruction(Fighter_Object_List)
+	#for i in range(0, 20):
+		#Fighter_Object_List.append(Fighter(getFighterData(fighter_urls[i])))
+	#	Fighter_Meta_Data.append(getFighterData(fighter_urls[i]))
+	#	Fighter_Object_List.append(Fighter(formatMetaData(Fighter_Meta_Data[i])))	
+	#print ('# OF FIGHTERS: ' + str(Fighter.number_of_fighters))
+	#Abdurakihmov.describe()
+	#Blaydes.describe()
+	#df = dataFrameConstruction(Fighter_Object_List)
 
 if __name__ == "__main__":
 	main()
