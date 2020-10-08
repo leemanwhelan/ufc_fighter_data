@@ -4,6 +4,8 @@ import string
 from pprint import pprint
 import pandas as pd
 import numpy as np
+from dfToPostGre import toSQL
+import obj_to_csv
 
 class Fighter:
 	number_of_fighters = 0
@@ -61,6 +63,15 @@ class Fighter:
 	def subAvg(self):
 		return self.sub_avg
 
+	def getWins(self):
+		return self.record[0]
+	def getLosses(self):
+		return self.record[1]
+	def getDraws(self):
+		return self.record[2]
+	def getNoContests(self):
+		return self.record[3]
+
 def describeRequest(requestObject):
 	print("HEADERS:")
 	print(requestObject.headers)
@@ -88,19 +99,23 @@ def getFighterUrls():
 
 #takes a figher's webpage url and returns a list with the fighter's metadata
 def getFighterData(fighter_URL):
-	webpage = requests.get(fighter_URL)
-	soup = BeautifulSoup(webpage.content, 'lxml')
-	fighter_data = []
+	try:	
+		webpage = requests.get(fighter_URL)
+		soup = BeautifulSoup(webpage.content, 'lxml')
+		fighter_data = []
 
-	head_data = soup.find('h2',  class_="b-content__title")
-	name_and_record = head_data.find_all('span')
-	name = name_and_record[0].text.strip()
-	record = name_and_record[1].text.strip()
-	nickname = soup.find('p',  class_="b-content__Nickname").text.strip()
-	fighter_data.extend((name, record, nickname))
-	for item in soup.find_all('li', class_ = 'b-list__box-list-item b-list__box-list-item_type_block'):
-		fighter_data.append(item.i.next_sibling.strip())
-	return fighter_data
+		head_data = soup.find('h2',  class_="b-content__title")
+		name_and_record = head_data.find_all('span')
+		name = name_and_record[0].text.strip()
+		record = name_and_record[1].text.strip()
+		nickname = soup.find('p',  class_="b-content__Nickname").text.strip()
+		fighter_data.extend((name, record, nickname))
+		for item in soup.find_all('li', class_ = 'b-list__box-list-item b-list__box-list-item_type_block'):
+			fighter_data.append(item.i.next_sibling.strip())
+		return fighter_data
+	except:
+		print('program failed on URL: ' + str(fighter_URL))
+		exit()
 
 #takes a list of fighter objects and creates and returns data frame
 def dataFrameConstruction(FighterObjectList):
@@ -190,11 +205,17 @@ def parse(fighter_meta_data):
 def main():
 	fighter_urls = getFighterUrls()
 	Fighter_Object_List = []
-	#for i in range(0, len(fighter_urls)):
-	for i in range(0, 20):
+	for i in range(0, len(fighter_urls)):
+	#for i in range(0, 2):
 		Fighter_Object_List.append(Fighter(parse(getFighterData(fighter_urls[i]))))	
 	print ('# OF FIGHTERS: ' + str(Fighter.number_of_fighters))
-	df = dataFrameConstruction(Fighter_Object_List)
+	#df = dataFrameConstruction(Fighter_Object_List)
+	#toSQL(df)
+	#df.to_csv(path_or_buf = "fighterData")
+	#obj_to_csv.to_csv_simple(Fighter_Object_List)
+	obj_to_csv.to_csv(Fighter_Object_List)
+
+
 
 if __name__ == "__main__":
 	main()

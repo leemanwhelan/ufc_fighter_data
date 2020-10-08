@@ -13,7 +13,7 @@ def to_csv(Fighters):
 			except:
 				bd = None
 			writer.writerow([fighter.first_name, fighter.last_name, fighter.getWins(), fighter.getLosses(), fighter.getDraws(), fighter.getNoContests(), fighter.nickname, fighter.height, fighter.weight, fighter.reach, fighter.stance, bd, fighter.sig_strikes_per_min, fighter.sig_strikes_accur, fighter.sig_strikes_absrb_min, fighter.sig_strikes_defnce, fighter.take_down_avg,	fighter.take_down_accur, fighter.take_down_def, fighter.sub_avg])
-			#fuck!
+			
 			#handle date
 
 def to_csv_simple(Fighters):
@@ -23,5 +23,5 @@ def to_csv_simple(Fighters):
 		for fighter in Fighters:
 		#parse record
 			writer.writerow([fighter.first_name, fighter.last_name, fighter.getWins(), fighter.getLosses(), fighter.getDraws(), fighter.getNoContests()])
-			#fuck!
+			
 			#handle date
